@@ -293,3 +293,12 @@ type LogEntry struct {
 	Trace  string `json:"trace"`
 	Type   string `json:"type"`
 }
+
+type (
+	Admin struct {
+		Level    string
+		SteamID  string
+		Username string
+	}
+	Admins []Admin
+)

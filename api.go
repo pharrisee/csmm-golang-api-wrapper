@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"regexp"
+	"strings"
 
 	"github.com/go-resty/resty/v2"
 )
@@ -42,7 +44,6 @@ func (gs GameServer) fetchJSON(method string, retval interface{}, queries ...url
 	query.Add("admintoken", gs.AdminToken)
 	uri.RawQuery = query.Encode()
 
-	fmt.Println(uri.String())
 	resp, err := gs.client.R().Get(uri.String())
 	if err != nil {
 		err = fmt.Errorf("connection to gameserver failed")
@@ -157,5 +158,28 @@ func (gs GameServer) GetLog(firstLine int, counts ...int) (theLog Log, err error
 	params.Add("firstline", firstLineS)
 	params.Add("count", fmt.Sprintf("%d", count))
 	err = gs.fetchJSON("/api/getlog", &theLog, params)
+	return
+}
+
+func (gs GameServer) GetAdmins() (admins Admins, err error) {
+	cr, err := gs.ExecuteConsoleCommand("admin list")
+	if err != nil {
+		return
+	}
+	lines := strings.Split(cr.Result, "\n")
+	lines = lines[2:]
+	i := 0
+	re := regexp.MustCompile(`(\d+?):\s+?(\d+)\s+?\(.+?:\s+?(.+?)\)`)
+	for _, line := range lines {
+		i++
+		if line == strings.TrimSpace(line) {
+			break
+		}
+		line = strings.TrimSpace(line)
+		matches := re.FindAllStringSubmatch(line, -1)
+		parts := matches[0][1:]
+		ad := Admin{Level: parts[0], SteamID: parts[1], Username: parts[2]}
+		admins = append(admins, ad)
+	}
 	return
 }
