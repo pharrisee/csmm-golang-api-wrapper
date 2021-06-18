@@ -45,6 +45,7 @@ func (gs GameServer) fetchJSON(method string, retval interface{}, queries ...url
 	fmt.Println(uri.String())
 	resp, err := gs.client.R().Get(uri.String())
 	if err != nil {
+		err = fmt.Errorf("connection to gameserver failed")
 		return
 	}
 	if resp.StatusCode() != 200 {
